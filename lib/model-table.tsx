@@ -51,6 +51,7 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
     <div className="overflow-x-auto">
       <table className="min-w-full border-collapse text-sm leading-5">
         <colgroup>
+          <col className="w-[3%]" />
           <col className="w-[16%]" />
           <col className="w-[12%]" />
           <col className="w-[12%]" />
@@ -62,6 +63,12 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
         </colgroup>
         <thead className="sticky top-0 z-10 bg-black text-zinc-400">
           <tr className={DIVIDER_CLASS}>
+            <th
+              scope="col"
+              className="whitespace-nowrap px-2 py-2 text-left font-normal"
+            >
+              #
+            </th>
             {HEADERS.map((header) => (
               <th
                 key={header.key}
@@ -91,8 +98,11 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
           </tr>
         </thead>
         <tbody>
-          {sortedRows.map((row) => (
+          {sortedRows.map((row, index) => (
             <tr key={row.model} className={`${DIVIDER_CLASS} bg-black`}>
+              <td className="whitespace-nowrap px-2 py-2 text-zinc-500">
+                {String(index + 1).padStart(3, "0")}
+              </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
                 <div className="flex items-center gap-2">
                   <ModelIcon provider={row.provider} />
@@ -121,7 +131,7 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
                 </span>
               </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
-                <span className={changeClassName(
+                <span className={frontierVariationClassName(
                   computeVariationFromBaseline(row.weightedAverageCost),
                 )}>
                   {formatVariationFromBaseline(row.weightedAverageCost)}
@@ -196,12 +206,12 @@ function ModelTags({
   return (
     <span className="flex items-center gap-1">
       {isNew ? (
-        <span className="inline-flex items-center justify-center rounded-sm bg-white/5 p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-white/40">
+        <span className="inline-flex items-center justify-center rounded-sm bg-white/[0.09] p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-zinc-500">
           NEW
         </span>
       ) : null}
       {isLatest ? (
-        <span className="inline-flex items-center justify-center rounded-sm bg-white/5 p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-white/40">
+        <span className="inline-flex items-center justify-center rounded-sm bg-white/[0.09] p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-zinc-500">
           LATEST
         </span>
       ) : null}
@@ -479,6 +489,22 @@ function changeClassName(value: number | null): string {
 
   if (value < 0) {
     return "text-red-500";
+  }
+
+  return "text-zinc-300";
+}
+
+function frontierVariationClassName(value: number | null): string {
+  if (value === null) {
+    return "text-zinc-300";
+  }
+
+  if (value > 0) {
+    return "text-red-500";
+  }
+
+  if (value < 0) {
+    return "text-emerald-400";
   }
 
   return "text-zinc-300";
