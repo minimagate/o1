@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import Image from "next/image";
 import type { ModelRow } from "@/lib/model-snapshot";
 
 const HEADERS = [
@@ -93,7 +94,10 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
           {sortedRows.map((row) => (
             <tr key={row.model} className={`${DIVIDER_CLASS} bg-black`}>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
-                {row.name}
+                <div className="flex items-center gap-2">
+                  <ModelIcon provider={row.provider} />
+                  <span>{row.name}</span>
+                </div>
               </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
                 {row.provider}
@@ -138,6 +142,32 @@ function formatWeightedAverageCost(value: number | null): string {
   return `$${formatCompactNumber(value)} / 1M tokens`;
 }
 
+function ModelIcon({ provider }: { provider: string }) {
+  const [iconFailed, setIconFailed] = useState(false);
+  const iconSrc = getModelIconSrc(provider);
+  const initials = getProviderInitials(provider);
+
+  return (
+    <span className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full bg-white/5 ring-1 ring-white/10">
+      {iconFailed ? (
+        <span className="text-[9px] font-medium uppercase tracking-wide text-zinc-400">
+          {initials}
+        </span>
+      ) : (
+        <Image
+          src={iconSrc}
+          alt=""
+          width={20}
+          height={20}
+          className="h-full w-full object-contain"
+          unoptimized
+          onError={() => setIconFailed(true)}
+        />
+      )}
+    </span>
+  );
+}
+
 function compareRows(left: ModelRow, right: ModelRow, key: SortKey): number {
   switch (key) {
     case "name":
@@ -166,6 +196,68 @@ function compareRows(left: ModelRow, right: ModelRow, key: SortKey): number {
     case "releaseDate":
       return compareNumber(left.createdAt, right.createdAt);
   }
+}
+
+function getModelIconSrc(provider: string): string {
+  const domain = getProviderDomain(provider);
+  return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(
+    domain,
+  )}&size=256`;
+}
+
+function getProviderDomain(provider: string): string {
+  const normalized = provider.trim().toLowerCase();
+
+  switch (normalized) {
+    case "anthropic":
+      return "https://anthropic.com/";
+    case "deepseek":
+      return "https://deepseek.com/";
+    case "google":
+      return "https://google.com/";
+    case "ibm granite":
+      return "https://ibm.com/";
+    case "inclusional":
+      return "https://inclusionai.com/";
+    case "minimax":
+      return "https://minimax.io/";
+    case "mistral ai":
+      return "https://mistral.ai/";
+    case "moonshot ai":
+      return "https://moonshot.ai/";
+    case "openai":
+      return "https://openai.com/";
+    case "qwen":
+      return "https://qwenlm.ai/";
+    case "xai":
+      return "https://x.ai/";
+    case "z.ai":
+      return "https://z.ai/";
+    case "nvidia":
+      return "https://nvidia.com/";
+    case "xiaomi":
+      return "https://xiaomi.com/";
+    case "openrouter":
+      return "https://openrouter.ai/";
+    default:
+      return `https://${normalized.replace(/\s+/g, "")}.com/`;
+  }
+}
+
+function getProviderInitials(provider: string): string {
+  const parts = provider
+    .replace(/[^\p{L}\p{N}\s.]/gu, " ")
+    .split(/[\s.]+/g)
+    .filter(Boolean);
+
+  if (parts.length === 0) {
+    return "•";
+  }
+
+  return parts
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? "")
+    .join("");
 }
 
 function formatChangePct(value: number | null): string {
