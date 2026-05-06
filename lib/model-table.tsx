@@ -97,10 +97,14 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
                 <div className="flex items-center gap-2">
                   <ModelIcon provider={row.provider} />
                   <span>{row.name}</span>
+                  <ModelTags isNew={row.isNew} isLatest={row.isLatest} />
                 </div>
               </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
-                {row.provider}
+                <span className="inline-flex items-center gap-1.5">
+                  <ProviderFlag provider={row.provider} />
+                  <span>{row.provider}</span>
+                </span>
               </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
                 {row.priceInput}
@@ -164,6 +168,43 @@ function ModelIcon({ provider }: { provider: string }) {
           onError={() => setIconFailed(true)}
         />
       )}
+    </span>
+  );
+}
+
+function ProviderFlag({ provider }: { provider: string }) {
+  const country = getProviderFlagCountry(provider);
+
+  if (!country) {
+    return null;
+  }
+
+  return <CountryFlagIcon country={country} />;
+}
+
+function ModelTags({
+  isNew,
+  isLatest,
+}: {
+  isNew?: boolean;
+  isLatest?: boolean;
+}) {
+  if (!isNew && !isLatest) {
+    return null;
+  }
+
+  return (
+    <span className="flex items-center gap-1">
+      {isNew ? (
+        <span className="inline-flex items-center justify-center rounded-sm bg-white/5 p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-white/40">
+          NEW
+        </span>
+      ) : null}
+      {isLatest ? (
+        <span className="inline-flex items-center justify-center rounded-sm bg-white/5 p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-white/40">
+          LATEST
+        </span>
+      ) : null}
     </span>
   );
 }
@@ -282,6 +323,96 @@ function getProviderDomain(provider: string): string {
       return "https://openrouter.ai/";
     default:
       return `https://${normalized.replace(/\s+/g, "")}.com/`;
+  }
+}
+
+type FlagCountry = "us" | "eu" | "cn";
+
+function CountryFlagIcon({ country }: { country: FlagCountry }) {
+  return (
+    <svg
+      aria-hidden="true"
+      viewBox="0 0 16 12"
+      className="h-3 w-4 shrink-0 rounded-[2px]"
+      fill="none"
+    >
+      {country === "us" ? (
+        <>
+          <rect width="16" height="12" rx="2" fill="#fff" />
+          <path d="M0 1h16v1H0zM0 3h16v1H0zM0 5h16v1H0zM0 7h16v1H0zM0 9h16v1H0zM0 11h16v1H0z" fill="#b91c1c" />
+          <rect width="7" height="6" rx="1.5" fill="#1d4ed8" />
+          <circle cx="1.5" cy="1.5" r="0.35" fill="#fff" />
+          <circle cx="3" cy="1.5" r="0.35" fill="#fff" />
+          <circle cx="4.5" cy="1.5" r="0.35" fill="#fff" />
+          <circle cx="2.25" cy="3" r="0.35" fill="#fff" />
+          <circle cx="3.75" cy="3" r="0.35" fill="#fff" />
+        </>
+      ) : null}
+      {country === "eu" ? (
+        <>
+          <rect width="16" height="12" rx="2" fill="#1d4ed8" />
+          <circle cx="8" cy="6" r="2.8" fill="none" stroke="#facc15" strokeWidth="1.1" />
+          <g fill="#facc15">
+            <circle cx="8" cy="2.2" r="0.42" />
+            <circle cx="10.2" cy="2.8" r="0.42" />
+            <circle cx="11.8" cy="4.4" r="0.42" />
+            <circle cx="12.4" cy="6.6" r="0.42" />
+            <circle cx="11.8" cy="8.8" r="0.42" />
+            <circle cx="10.2" cy="10.4" r="0.42" />
+            <circle cx="8" cy="11" r="0.42" />
+            <circle cx="5.8" cy="10.4" r="0.42" />
+            <circle cx="4.2" cy="8.8" r="0.42" />
+            <circle cx="3.6" cy="6.6" r="0.42" />
+            <circle cx="4.2" cy="4.4" r="0.42" />
+            <circle cx="5.8" cy="2.8" r="0.42" />
+          </g>
+        </>
+      ) : null}
+      {country === "cn" ? (
+        <>
+          <rect width="16" height="12" rx="2" fill="#dc2626" />
+          <path
+            d="M4.3 3.1l.5 1.4h1.5L5.1 5.4l.5 1.5-1.3-.9-1.3.9.5-1.5-1.2-.9h1.5z"
+            fill="#facc15"
+          />
+          <circle cx="10.7" cy="2.4" r="0.65" fill="#facc15" />
+          <circle cx="12" cy="4" r="0.55" fill="#facc15" />
+          <circle cx="12" cy="6.1" r="0.55" fill="#facc15" />
+          <circle cx="10.8" cy="7.7" r="0.55" fill="#facc15" />
+        </>
+      ) : null}
+    </svg>
+  );
+}
+
+function getProviderFlagCountry(provider: string): FlagCountry | null {
+  const key = normalizeProviderKey(provider);
+
+  switch (key) {
+    case "anthropic":
+    case "openai":
+    case "google":
+    case "xai":
+    case "ibmgranite":
+    case "nvidia":
+    case "essentialai":
+    case "relace":
+      return "us";
+    case "mistralai":
+      return "eu";
+    case "deepseek":
+    case "qwen":
+    case "xiaomi":
+    case "moonshotai":
+    case "inclusionai":
+    case "inclusional":
+    case "bytedance":
+    case "zai":
+      return "cn";
+    case "minimax":
+      return "cn";
+    default:
+      return null;
   }
 }
 
