@@ -1,13 +1,13 @@
 import type { ModelRow } from "@/lib/model-snapshot";
 
 const HEADERS = [
-  { key: "name", label: "name" },
-  { key: "provider", label: "provider" },
-  { key: "priceInput", label: "price_input" },
-  { key: "priceOutput", label: "price_output" },
-  { key: "weightedAverageCost", label: "weighted_avg_cost" },
+  { key: "name", label: "Name" },
+  { key: "provider", label: "Provider" },
+  { key: "priceInput", label: "Price Input" },
+  { key: "priceOutput", label: "Price Output" },
+  { key: "weightedAverageCost", label: "Weighted Avg Cost" },
   { key: "closeChangePct", label: "% change" },
-  { key: "releaseDate", label: "release_date" },
+  { key: "releaseDate", label: "Release Date" },
 ] as const;
 
 const DIVIDER_CLASS = "border-b border-white/5";
