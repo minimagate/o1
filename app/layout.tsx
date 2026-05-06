@@ -2,8 +2,9 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "AI Model Table",
+  title: "Ordinal 1",
   description: "Daily refreshed AI model table powered by Vercel Cron and Blob.",
+  manifest: "/site.webmanifest",
 };
 
 export default function RootLayout({

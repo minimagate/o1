@@ -6,8 +6,6 @@ const SNAPSHOT_PATH = "model-table/latest.json";
 const CLOSE_SNAPSHOT_PATH = "model-table/close.json";
 const OPENROUTER_API_URL = "https://openrouter.ai/api/v1/models?output_modalities=text";
 const OPENROUTER_MODELS_PAGE_URL = "https://openrouter.ai/models?q=pricing";
-const MINIMAX_URL = "https://api.minimax.io/anthropic/v1/messages";
-const MINIMAX_MODEL = "MiniMax-M2.7";
 
 type OpenRouterPricing = {
   prompt?: string | number | null;
@@ -96,7 +94,6 @@ export async function refreshModelSnapshot({
   ]);
 
   let rows = mergeModelSources(apiModels, scrapedIds);
-  rows = await maybeNormalizeScrapedRowsWithMiniMax(rows);
   rows = applyCloseComparison(rows, previousClose?.rows ?? []);
   rows = sortRows(rows);
 
@@ -277,104 +274,6 @@ function isZeroPrice(value: string | number | null | undefined): boolean {
 
   const parsed = Number(value);
   return Number.isFinite(parsed) && parsed === 0;
-}
-
-async function maybeNormalizeScrapedRowsWithMiniMax(
-  rows: ModelRow[],
-): Promise<ModelRow[]> {
-  const scrapedRows = rows.filter((row) => row.source === "scraped");
-
-  if (scrapedRows.length === 0 || !process.env.MINIMAX_API_KEY) {
-    return rows;
-  }
-
-  try {
-    const response = await fetch(MINIMAX_URL, {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${process.env.MINIMAX_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        model: MINIMAX_MODEL,
-        max_tokens: 800,
-        system:
-          "You normalize AI model table rows. Return JSON only. Do not invent prices.",
-        messages: [
-          {
-            role: "user",
-            content: JSON.stringify({
-              instructions:
-                "Normalize the display name and provider label for these scraped OpenRouter rows. Preserve model ids and all price fields exactly as given.",
-              rows: scrapedRows.map((row) => ({
-                model: row.model,
-                name: row.name,
-                provider: row.provider,
-                priceInput: row.priceInput,
-                priceOutput: row.priceOutput,
-              })),
-            }),
-          },
-        ],
-      }),
-    });
-
-    if (!response.ok) {
-      return rows;
-    }
-
-    const payload = (await response.json()) as {
-      content?: Array<{ type?: string; text?: string }>;
-    };
-
-    const text = payload.content
-      ?.map((part) => (part.type === "text" ? part.text ?? "" : ""))
-      .join("")
-      .trim();
-
-    if (!text) {
-      return rows;
-    }
-
-    const parsed = JSON.parse(text) as {
-      rows?: Array<{
-        model?: string;
-        name?: string;
-        provider?: string;
-      }>;
-    };
-
-    if (!Array.isArray(parsed.rows) || parsed.rows.length === 0) {
-      return rows;
-    }
-
-    const normalized = new Map(
-      parsed.rows
-        .filter((row) => typeof row.model === "string")
-        .map((row) => [
-          row.model as string,
-          {
-            name: sanitizeLabel(row.name),
-            provider: sanitizeLabel(row.provider),
-          },
-        ]),
-    );
-
-    return rows.map((row) => {
-      const update = normalized.get(row.model);
-      if (!update) {
-        return row;
-      }
-
-      return {
-        ...row,
-        name: update.name ?? row.name,
-        provider: update.provider ?? row.provider,
-      };
-    });
-  } catch {
-    return rows;
-  }
 }
 
 function toModelRow(model: OpenRouterModel, source: ModelRow["source"]): ModelRow {
