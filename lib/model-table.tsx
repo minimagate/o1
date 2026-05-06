@@ -7,8 +7,11 @@ const HEADERS = [
   { key: "priceOutput", label: "Price Output" },
   { key: "weightedAverageCost", label: "Weighted Avg Cost" },
   { key: "closeChangePct", label: "% change" },
+  { key: "weightedCostVariationPct", label: "% on frontier" },
   { key: "releaseDate", label: "Release Date" },
 ] as const;
+
+const WEIGHTED_COST_BASELINE = 9;
 
 const DIVIDER_CLASS = "border-b border-white/5";
 
@@ -21,7 +24,8 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
           <col className="w-[12%]" />
           <col className="w-[12%]" />
           <col className="w-[12%]" />
-          <col className="w-[16%]" />
+          <col className="w-[14%]" />
+          <col className="w-[10%]" />
           <col className="w-[10%]" />
           <col className="w-[14%]" />
         </colgroup>
@@ -62,6 +66,13 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
                 </span>
               </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
+                <span className={changeClassName(
+                  computeVariationFromBaseline(row.weightedAverageCost),
+                )}>
+                  {formatVariationFromBaseline(row.weightedAverageCost)}
+                </span>
+              </td>
+              <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
                 {row.releaseDate ?? "—"}
               </td>
             </tr>
@@ -93,6 +104,29 @@ function formatChangePct(value: number | null): string {
   return `${sign}${value.toFixed(2)}%`;
 }
 
+function formatVariationFromBaseline(value: number | null): string {
+  const variation = computeVariationFromBaseline(value);
+
+  if (variation === null) {
+    return "—";
+  }
+
+  if (!Number.isFinite(variation)) {
+    return variation > 0 ? "+∞%" : "-∞%";
+  }
+
+  const sign = variation > 0 ? "+" : "";
+  return `${sign}${variation.toFixed(2)}%`;
+}
+
+function computeVariationFromBaseline(value: number | null): number | null {
+  if (value === null) {
+    return null;
+  }
+
+  return ((value - WEIGHTED_COST_BASELINE) / WEIGHTED_COST_BASELINE) * 100;
+}
+
 function changeClassName(value: number | null): string {
   if (value === null) {
     return "text-zinc-300";
@@ -103,7 +137,7 @@ function changeClassName(value: number | null): string {
   }
 
   if (value < 0) {
-    return "text-red-400";
+    return "text-red-500";
   }
 
   return "text-zinc-300";
