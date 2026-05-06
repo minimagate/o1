@@ -1,5 +1,7 @@
 import { ImageResponse } from "next/og";
 
+export const runtime = "edge";
+
 export const size = {
   width: 180,
   height: 180,
@@ -20,13 +22,13 @@ export default function AppleIcon() {
           background:
             "linear-gradient(135deg, #111111 0%, #1f1f1f 45%, #d4a017 100%)",
           color: "#ffffff",
-          fontSize: 124,
+          fontSize: 96,
           fontWeight: 700,
           letterSpacing: "-0.06em",
           borderRadius: 36,
         }}
       >
-        1
+        o1
       </div>
     ),
     {
