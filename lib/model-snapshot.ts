@@ -94,16 +94,13 @@ export async function refreshModelSnapshot({
   ]);
 
   let rows = mergeModelSources(apiModels, scrapedIds);
+  rows = rows.filter((row) => !isOpenRouterRow(row));
   rows = applyCloseComparison(rows, previousClose?.rows ?? []);
   rows = sortRows(rows);
 
   const snapshot: ModelSnapshot = {
     generatedAt: new Date().toISOString(),
-    counts: {
-      api: apiModels.length,
-      scraped: scrapedIds.length,
-      total: rows.length,
-    },
+    counts: summarizeCounts(rows),
     rows,
   };
 
@@ -138,6 +135,9 @@ async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
   return Array.isArray(payload.data)
     ? payload.data.filter(
         (model) =>
+          !isOpenRouterLabel(model.id) &&
+          !isOpenRouterLabel(model.canonical_slug) &&
+          !isOpenRouterLabel(model.name) &&
           !isLatestAlias(model.id, model.canonical_slug) &&
           !isAutoRouterModel(model) &&
           !isFreeModel(model),
@@ -162,7 +162,12 @@ async function scrapeOpenRouterModelIds(): Promise<string[]> {
       const rawId = match[1];
       const decoded = decodeURIComponent(rawId).replace(/\/$/, "");
 
-      if (decoded.includes("/") && !isLatestAlias(decoded) && !isAutoRouterModel({ id: decoded })) {
+      if (
+        decoded.includes("/") &&
+        !isOpenRouterLabel(decoded) &&
+        !isLatestAlias(decoded) &&
+        !isAutoRouterModel({ id: decoded })
+      ) {
         ids.add(decoded);
       }
     }
@@ -204,7 +209,7 @@ function mergeModelSources(
     });
   }
 
-  return [...merged.values()];
+  return [...merged.values()].filter((row) => !isOpenRouterRow(row));
 }
 
 function isLatestAlias(id: string, canonicalSlug?: string | null): boolean {
@@ -224,6 +229,10 @@ function isAutoRouterModel(model: Pick<OpenRouterModel, "id" | "canonical_slug" 
       value.includes("openrouter/auto") ||
       value.includes("openrouter-auto"),
   );
+}
+
+function isOpenRouterLabel(value: string | null | undefined): boolean {
+  return typeof value === "string" && value.toLowerCase().startsWith("openrouter");
 }
 
 function applyCloseComparison(rows: ModelRow[], previousRows: ModelRow[]): ModelRow[] {
@@ -447,25 +456,16 @@ function parseSnapshot(text: string): ModelSnapshot {
     throw new Error("Invalid snapshot payload");
   }
 
+  const rows = payload.rows
+    .map(normalizeRow)
+    .filter((row) => !isOpenRouterRow(row));
+
   return {
     generatedAt: typeof payload.generatedAt === "string"
       ? payload.generatedAt
       : new Date().toISOString(),
-    counts: normalizeCounts(payload.counts, payload.rows.length),
-    rows: payload.rows.map(normalizeRow),
-  };
-}
-
-function normalizeCounts(
-  counts: SnapshotPayload["counts"] | undefined,
-  rowCount: number,
-): SnapshotPayload["counts"] {
-  return {
-    api: Number.isFinite(counts?.api ?? NaN) ? Number(counts?.api) : rowCount,
-    scraped: Number.isFinite(counts?.scraped ?? NaN)
-      ? Number(counts?.scraped)
-      : 0,
-    total: Number.isFinite(counts?.total ?? NaN) ? Number(counts?.total) : rowCount,
+    counts: summarizeCounts(rows),
+    rows,
   };
 }
 
@@ -488,6 +488,18 @@ function normalizeRow(row: ModelRow): ModelRow {
       ? row.contextLength
       : null,
     source: row.source === "scraped" ? "scraped" : "openrouter",
+  };
+}
+
+function isOpenRouterRow(row: ModelRow): boolean {
+  return isOpenRouterLabel(row.model) || isOpenRouterLabel(row.name);
+}
+
+function summarizeCounts(rows: ModelRow[]): SnapshotPayload["counts"] {
+  return {
+    api: rows.filter((row) => row.source === "openrouter").length,
+    scraped: rows.filter((row) => row.source === "scraped").length,
+    total: rows.length,
   };
 }
 
