@@ -7,8 +7,24 @@ const metadataBase = (() => {
     process.env.NEXT_PUBLIC_SITE_URL ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
 
-  return siteUrl ? new URL(siteUrl) : new URL("http://localhost:3000");
+  return siteUrl
+    ? new URL(normalizeSiteUrl(siteUrl))
+    : new URL("http://localhost:3000");
 })();
+
+function normalizeSiteUrl(value: string): string {
+  const trimmed = value.trim();
+
+  if (trimmed.startsWith("hhtps://")) {
+    return `https://${trimmed.slice("hhtps://".length)}`;
+  }
+
+  if (!/^https?:\/\//i.test(trimmed)) {
+    return `https://${trimmed}`;
+  }
+
+  return trimmed;
+}
 
 export const metadata: Metadata = {
   metadataBase,
