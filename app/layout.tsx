@@ -2,9 +2,13 @@ import type { Metadata } from "next";
 import { Analytics } from "@vercel/analytics/next";
 import "./globals.css";
 
-const metadataBase = process.env.NEXT_PUBLIC_SITE_URL
-  ? new URL(process.env.NEXT_PUBLIC_SITE_URL)
-  : new URL("http://localhost:3000");
+const metadataBase = (() => {
+  const siteUrl =
+    process.env.NEXT_PUBLIC_SITE_URL ??
+    (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : null);
+
+  return siteUrl ? new URL(siteUrl) : new URL("http://localhost:3000");
+})();
 
 export const metadata: Metadata = {
   metadataBase,
