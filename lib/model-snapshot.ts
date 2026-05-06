@@ -58,14 +58,23 @@ type SnapshotPayload = {
 const PROVIDER_LABELS: Record<string, string> = {
   anthropic: "Anthropic",
   deepseek: "DeepSeek",
+  bytedance: "ByteDance",
   google: "Google",
+  essentialai: "Essential AI",
+  inclusionai: "Inclusion AI",
+  inclusional: "Inclusion AI",
   minimax: "MiniMax",
   mistralai: "Mistral AI",
+  moonshotai: "Moonshot AI",
+  "moonshot-ai": "Moonshot AI",
   nvidia: "NVIDIA",
   openai: "OpenAI",
+  relace: "Relace",
   qwen: "Qwen",
   "x-ai": "xAI",
+  xai: "xAI",
   zai: "Z.ai",
+  "z-ai": "Z.ai",
 };
 
 export async function getLatestModelSnapshot({
@@ -375,7 +384,7 @@ function computeWeightedAverageCost(
     return null;
   }
 
-  return ((input + output) / 2) * 1_000_000;
+  return (input + output) * 1_000_000;
 }
 
 function toNumber(value: string | number | null | undefined): number | null {

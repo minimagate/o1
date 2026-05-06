@@ -15,7 +15,7 @@ const HEADERS = [
   { key: "releaseDate", label: "Release Date" },
 ] as const;
 
-const WEIGHTED_COST_BASELINE = 9;
+const WEIGHTED_COST_BASELINE = 18;
 
 const DIVIDER_CLASS = "border-b border-white/5";
 
@@ -199,10 +199,39 @@ function compareRows(left: ModelRow, right: ModelRow, key: SortKey): number {
 }
 
 function getModelIconSrc(provider: string): string {
+  const key = normalizeProviderKey(provider);
+  if (key === "zai") {
+    return "/provider-icons/zai.svg";
+  }
+
+  if (key === "inclusionai" || key === "inclusional") {
+    return "/provider-icons/inclusionai.svg";
+  }
+
+  if (key === "moonshotai") {
+    return "/provider-icons/moonshotai.svg";
+  }
+
+  if (key === "bytedance") {
+    return "/provider-icons/bytedance.svg";
+  }
+
+  if (key === "relace") {
+    return "/provider-icons/relace.svg";
+  }
+
+  if (key === "essentialai") {
+    return "/provider-icons/essentialai.svg";
+  }
+
   const domain = getProviderDomain(provider);
   return `https://t0.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=${encodeURIComponent(
     domain,
   )}&size=256`;
+}
+
+function normalizeProviderKey(provider: string): string {
+  return provider.trim().toLowerCase().replace(/[^a-z0-9]+/g, "");
 }
 
 function getProviderDomain(provider: string): string {
@@ -215,16 +244,26 @@ function getProviderDomain(provider: string): string {
       return "https://deepseek.com/";
     case "google":
       return "https://google.com/";
+    case "bytedance":
+      return "https://bytedance.com/";
     case "ibm granite":
       return "https://ibm.com/";
     case "inclusional":
+    case "inclusionai":
       return "https://inclusionai.com/";
+    case "essential ai":
+    case "essentialai":
+      return "https://essential.ai/";
     case "minimax":
       return "https://minimax.io/";
     case "mistral ai":
       return "https://mistral.ai/";
     case "moonshot ai":
+    case "moonshotai":
+    case "moonshot-ai":
       return "https://moonshot.ai/";
+    case "relace":
+      return "https://relace.ai/";
     case "openai":
       return "https://openai.com/";
     case "qwen":
@@ -232,6 +271,8 @@ function getProviderDomain(provider: string): string {
     case "xai":
       return "https://x.ai/";
     case "z.ai":
+    case "z-ai":
+    case "zai":
       return "https://z.ai/";
     case "nvidia":
       return "https://nvidia.com/";
