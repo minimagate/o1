@@ -37,8 +37,6 @@ export type ModelRow = {
   createdAt: number | null;
   contextLength: number | null;
   source: "openrouter" | "scraped";
-  isNew?: boolean;
-  isLatest?: boolean;
 };
 
 export type ModelSnapshot = {
@@ -121,42 +119,6 @@ export async function refreshModelSnapshot({
   }
 
   return snapshot;
-}
-
-export function addModelTags(
-  rows: ModelRow[],
-  now = Date.now(),
-): ModelRow[] {
-  const newestByProvider = new Map<string, ModelRow>();
-  const cutoff = Math.floor(now / 1000) - 14 * 24 * 60 * 60;
-
-  for (const row of rows) {
-    const createdAt = row.createdAt;
-    if (typeof createdAt !== "number") {
-      continue;
-    }
-
-    const providerKey = row.provider.trim().toLowerCase();
-    const current = newestByProvider.get(providerKey);
-    const currentCreatedAt = current?.createdAt ?? -1;
-
-    if (
-      !current ||
-      createdAt > currentCreatedAt ||
-      (createdAt === currentCreatedAt &&
-        row.model.localeCompare(current.model) < 0)
-    ) {
-      newestByProvider.set(providerKey, row);
-    }
-  }
-
-  return rows.map((row) => ({
-    ...row,
-    isNew: typeof row.createdAt === "number" && row.createdAt >= cutoff,
-    isLatest:
-      typeof row.createdAt === "number" &&
-      newestByProvider.get(row.provider.trim().toLowerCase())?.model === row.model,
-  }));
 }
 
 async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {

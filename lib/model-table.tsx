@@ -107,7 +107,6 @@ export function ModelTable({ rows }: { rows: ModelRow[] }) {
                 <div className="flex items-center gap-2">
                   <ModelIcon provider={row.provider} />
                   <span>{row.name}</span>
-                  <ModelTags isNew={row.isNew} isLatest={row.isLatest} />
                 </div>
               </td>
               <td className="whitespace-nowrap px-2 py-2 text-zinc-300">
@@ -190,33 +189,6 @@ function ProviderFlag({ provider }: { provider: string }) {
   }
 
   return <CountryFlagIcon country={country} />;
-}
-
-function ModelTags({
-  isNew,
-  isLatest,
-}: {
-  isNew?: boolean;
-  isLatest?: boolean;
-}) {
-  if (!isNew && !isLatest) {
-    return null;
-  }
-
-  return (
-    <span className="flex items-center gap-1">
-      {isNew ? (
-        <span className="inline-flex items-center justify-center rounded-sm bg-white/[0.09] p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-zinc-500">
-          NEW
-        </span>
-      ) : null}
-      {isLatest ? (
-        <span className="inline-flex items-center justify-center rounded-sm bg-white/[0.09] p-1 text-[10px] font-medium uppercase leading-none tracking-[0.14em] text-zinc-500">
-          LATEST
-        </span>
-      ) : null}
-    </span>
-  );
 }
 
 function compareRows(left: ModelRow, right: ModelRow, key: SortKey): number {
